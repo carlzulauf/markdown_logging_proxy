@@ -1,10 +1,12 @@
 # MarkdownLoggingProxy
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/markdown_logging_proxy`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Ruby object to wrap your ruby objects when you are trying to figure out how your ruby objects are being called.
 
 ## Installation
+
+Meant to be installable as a gem, and also compile-able to a single file for copy+pasting to irb/pry sessions.
+
+### Gem Install
 
 Install the gem and add to the application's Gemfile by executing:
 
@@ -14,9 +16,19 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     $ gem install markdown_logging_proxy
 
+### Copy+Paste
+
+Look at `dist/` for compiled versions of the gem which can safely (relatively) be copied into irb/pry sessions.
+
 ## Usage
 
-TODO: Write usage instructions here
+Wrap an object in the proxy and tell it where to log and find out a lot about what happens to that object.
+
+```ruby
+user = User.find(123)
+proxy = MarkdownLoggingProxy.new(target: user, location: "/home/deploy/user_trace.md")
+ComplicatedProcess.for_user(proxy)
+```
 
 ## Development
 

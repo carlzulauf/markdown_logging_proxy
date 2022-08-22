@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "markdown_logging_proxy/version"
+require 'logger'
+require 'securerandom'
+require 'pp'
+require 'time'
 
-module MarkdownLoggingProxy
-  class Error < StandardError; end
-  # Your code goes here...
-end
+require_relative "markdown_logging_proxy/proxy"

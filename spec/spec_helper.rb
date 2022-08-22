@@ -1,5 +1,4 @@
-# frozen_string_literal: true
-
+require "pry"
 require "markdown_logging_proxy"
 
 RSpec.configure do |config|
