@@ -20,7 +20,12 @@ module MarkdownLoggingProxy
       @ignore = (ignore + proxy_response).uniq
       @proxy_response = proxy_response
       @target = target
-      @logger = logger || __setup_logger(location)
+      @logger =
+        if logger
+          Utils.format_logger(logger)
+        else
+          Utils.create_logger(location)
+        end
       @backtrace = backtrace
       overwrite.each do |meth|
         define_method(meth) do |*args, &blk|
@@ -115,14 +120,6 @@ module MarkdownLoggingProxy
 
     def __inspect_object(obj)
       ['```ruby', obj.pretty_inspect.chomp, '```'].join("\n")
-    end
-
-    def __setup_logger(log_location)
-      Logger.new(log_location).tap do |logger|
-        logger.formatter = proc do |severity, time, _, msg|
-          "#{'#' * @heading_level} #{severity} in #{Process.pid} at #{time.iso8601} -- #{msg}\n\n"
-        end
-      end
     end
   end
 

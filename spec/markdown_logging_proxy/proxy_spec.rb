@@ -10,7 +10,6 @@ RSpec.describe MarkdownLoggingProxy::Proxy do
     end
 
     it "returns the correct value" do
-      # binding.pry
       expect(subject.upcase).to eq(a_symbol.upcase)
     end
   end
