@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "markdown_logging_proxy"
+
+# Working usage examples that also generate an example log: tmp/example.log
+
+# Let's imagine a process that harvests fruit from a fruit source
+#  Somewhere in the complicated process our software is breaking.
+#  We're going to wrap our fruit source in a proxy to see what's going on.
+
+class AppleTree
+  def initialize(apples = 0)
+    @apples = apples
+  end
+
+  def pick
+    return false if @apples == 0
+    @apples -= 1
+    true
+  end
+
+  def description
+    "an apple tree"
+  end
+end
+
+class FruitPicker < Struct.new(:fruit_source)
+  def harvest
+    puts "Picked from #{fruit_source.description}" while fruit_source.pick
+    # maybe the process is swallowing the error you're looking for
+    fruit_source.fertilize(:organic) rescue nil
+  end
+end
+
+log_path = "tmp/example.log"
+File.unlink(log_path) if File.exist?(log_path)
+
+# instead of sending the tree through the process, we'll wrap it in a proxy...
+tree = AppleTree.new(2)
+proxy = MarkdownLoggingProxy.new(
+  tree,
+  location: log_path,
+  backtrace: true,
+)
+
+# and tell the picker to harvest from the proxy
+picker = FruitPicker.new(proxy)
+picker.harvest
