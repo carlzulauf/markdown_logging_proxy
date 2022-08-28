@@ -33,7 +33,7 @@ class FruitPicker < Struct.new(:fruit_source)
   end
 end
 
-log_path = "tmp/example.log"
+log_path = "tmp/example.md"
 File.unlink(log_path) if File.exist?(log_path)
 
 # instead of sending the tree through the process, we'll wrap it in a proxy...
