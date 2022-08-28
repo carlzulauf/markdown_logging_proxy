@@ -4,6 +4,16 @@ module MarkdownLoggingProxy
       ['```ruby', object.pretty_inspect.chomp, '```'].join("\n")
     end
 
+    def self.id_object(object)
+      # #<Object:0x00007f5a0919e140>
+      "##{object.class}:0x#{object.object_id.to_s(16)}>"
+    end
+
+    def self.build(location, **options)
+      return location if location.is_a?(MarkdownLogger)
+      new(location, **options)
+    end
+
     attr_reader :std_logger, :backtrace, :heading_level
 
     def initialize(location, backtrace: true)
@@ -17,7 +27,7 @@ module MarkdownLoggingProxy
       std_logger.send(level, msg)
     end
 
-    def inspect_backtrace(ignore = 3)
+    def inspect_backtrace(ignore = 4)
       return unless backtrace
       lines =
         case backtrace
@@ -26,7 +36,12 @@ module MarkdownLoggingProxy
         else
           []
         end
-      lines.map { |l| "* #{l.chop}`" }.join("\n")
+      <<~MSG.chomp
+
+        Backtrace:
+
+        #{lines.map { |l| "* #{l.chop}`" }.join("\n")}
+      MSG
     end
 
     private
