@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+# Builds gem and the single file copy+pasteable version
+
+require "bundler/setup"
+require "pry"
+
+project_dir = File.expand_path(File.join(File.dirname(__FILE__), ".."))
+lib_dir = File.join(project_dir, "lib")
+out_path = File.join(project_dir, "dist", "markdown_logging_proxy.rb")
+
+# ignore the base lib file as it should just have all the `require`s
+ignore = ["markdown_logging_proxy.rb"]
+
+files = Dir.glob(File.join(lib_dir, "**", "*.rb"))
+files -= ignore.map { |rel_path| File.join(lib_dir, rel_path) }
+
+# Just mash it all together
+# assumes lib/ files have final return at end of file
+doc = files.map{ |lib_file| File.read(lib_file) }.join
+File.write(out_path, doc)
