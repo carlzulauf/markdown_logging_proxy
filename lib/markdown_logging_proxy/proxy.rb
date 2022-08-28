@@ -11,10 +11,9 @@ module MarkdownLoggingProxy
     def initialize(
         to_proxy = nil,
         target: nil,
-        logger: nil,
         location: STDOUT,
-        backtrace: /projects/, # regex/true/false backtrace control
-        ignore: [], # methods we shouldn't proxy
+        backtrace: true, # regex/true/false backtrace control
+        ignore: [], # methods we shouldn't log/proxy
         proxy_response: [], # methods we should return a proxy for
         overwrite: [] # methods defined on Object we should overwrite
       )
@@ -22,13 +21,7 @@ module MarkdownLoggingProxy
       @proxy_response = proxy_response
       @target = to_proxy || target
       raise ArgumentError, "Missing required proxy target" unless @target
-      @logger =
-        if logger
-          Utils.format_logger(logger)
-        else
-          Utils.create_logger(location)
-        end
-      @backtrace = backtrace
+      @logger = MarkdownLogger.new(location, backtrace: backtrace)
       overwrite.each do |meth|
         define_method(meth) do |*args, &blk|
           __trace_method(meth, args, &blk)
@@ -43,58 +36,43 @@ module MarkdownLoggingProxy
     private
 
     def __trace_method(meth, args, &blk)
-      __log :info, meth, 2, <<~MSG
+      @logger.log :info, 1, <<~MSG
         Calling `#{meth}`
 
         Arguments:
 
-        #{__inspect_object(args)}
+        #{MarkdownLogger.inspect_object(args)}
 
         Block? #{block_given? ? 'Yes' : 'No'}
-        #{__display_backtrace}
+        #{@logger.inspect_backtrace}
       MSG
 
       __proxy_response(meth, @target.public_send(meth, *args, &__proxy_block(meth, blk))).tap do |response|
-        __log :info, meth, <<~MSG
+        @logger.log :info, 2, <<~MSG
           `#{meth}` Response
 
-          #{__inspect_object(response)}
+          #{MarkdownLogger.inspect_object(response)}
         MSG
       end
     rescue StandardError => e
-      __log :error, meth, <<~MSG
+      @logger.log :error, 2, <<~MSG
         Error in `#{meth}`
 
         Type: #{e.class}
 
-        #{__inspect_object(e)}
+        #{MarkdownLogger.inspect_object(e)}
       MSG
       raise e
     end
 
-    def __display_backtrace(ignore = 3)
-      displayed_trace =
-        case @backtrace
-        when true then caller(ignore)
-        when Regexp then caller(ignore).grep(@backtrace)
-        end
-      displayed_trace.map { |l| "* #{l.chop}`" }.join("\n") if displayed_trace
-    end
-
-    def __log(level, meth, heading = 3, msg)
-      return if @ignore.member?(meth)
-      @heading_level = heading
-      @logger.send(level, msg)
-    end
-
     def __proxy_response(meth, response)
       return response unless @proxy_response.member?(meth)
-      __log :info, nil, <<~MSG
+      @logger.log :info, 3, <<~MSG
         Using proxied response for `#{meth}`
 
         Object to proxy:
 
-        #{__inspect_object(response)}
+        #{MarkdownLogger.inspect_object(response)}
       MSG
       self.class.new(target: response, logger: @logger)
     end
@@ -103,26 +81,21 @@ module MarkdownLoggingProxy
       return if block.nil?
       logger = @logger
       proc do |*args|
-        logger.info <<~MSG
+        logger.log :info, 3, <<~MSG
           Yield to block in `#{meth}`
 
           Arguments:
 
-          #{__inspect_object(args)}
+          #{MarkdownLogger.inspect_object(args)}
         MSG
         block.call(*args).tap do |response|
-          logger.info <<~MSG
+          logger.log :info, 4, <<~MSG
             Response from block in `#{meth}`
 
-            #{__inspect_object(response)}
+            #{MarkdownLogger.inspect_object(response)}
           MSG
         end
       end
     end
-
-    def __inspect_object(obj)
-      ['```ruby', obj.pretty_inspect.chomp, '```'].join("\n")
-    end
   end
-
 end
