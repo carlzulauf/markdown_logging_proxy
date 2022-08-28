@@ -4,7 +4,7 @@ module MarkdownLoggingProxy
       ['```ruby', object.pretty_inspect.chomp, '```'].join("\n")
     end
 
-    attr_reader :std_logger, :backtrace
+    attr_reader :std_logger, :backtrace, :heading_level
 
     def initialize(location, backtrace: true)
       @std_logger = create_logger(location)
