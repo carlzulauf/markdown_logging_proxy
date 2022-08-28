@@ -1,6 +1,11 @@
 require "pry"
 require "markdown_logging_proxy"
 
+PROJECT_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
+
+# ensure tmp/ directory exists
+FileUtils.mkpath File.join(PROJECT_ROOT, "tmp")
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
