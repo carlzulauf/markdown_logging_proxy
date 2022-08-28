@@ -9,7 +9,8 @@ module MarkdownLoggingProxy
   class Proxy
 
     def initialize(
-        target:,
+        to_proxy = nil,
+        target: nil,
         logger: nil,
         location: STDOUT,
         backtrace: /projects/, # regex/true/false backtrace control
@@ -19,7 +20,8 @@ module MarkdownLoggingProxy
       )
       @ignore = (ignore + proxy_response).uniq
       @proxy_response = proxy_response
-      @target = target
+      @target = to_proxy || target
+      raise ArgumentError, "Missing required proxy target" unless @target
       @logger =
         if logger
           Utils.format_logger(logger)
