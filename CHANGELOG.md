@@ -33,3 +33,7 @@
 ## [1.2.0]
 
 - Overwrite as many `Object` methods as we can by default
+
+## [1.3.0]
+
+- Add `inspect_method` configuration option
