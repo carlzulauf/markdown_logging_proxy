@@ -1,19 +1,5 @@
 module MarkdownLoggingProxy
   class MarkdownLogger
-    def self.inspect_object(object, show_id = true)
-      [
-        '```ruby',
-        ("# #{id_object(object)}" if show_id),
-        object.pretty_inspect.chomp,
-        '```'
-      ].compact.join("\n")
-    end
-
-    def self.id_object(object)
-      # #<Object:0x00007f5a0919e140>
-      "`#<#{object.class}:0x#{object.object_id.to_s(16)}>`"
-    end
-
     def self.build(location, **options)
       return location if location.is_a?(MarkdownLogger)
       new(location, **options)

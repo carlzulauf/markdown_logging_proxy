@@ -8,6 +8,7 @@ module MarkdownLoggingProxy
         target: nil,
         location: STDOUT,
         backtrace: true, # regex/true/false backtrace control
+        inspect_method: :pretty_inspect,
         ignore: [], # methods we shouldn't log/proxy
         proxy_response: [], # methods we should return a proxy for
         overwrite: DEFAULT_OVERWRITES
@@ -18,6 +19,7 @@ module MarkdownLoggingProxy
         target: @target,
         proxy: self,
         logger: @logger,
+        inspect_method: inspect_method,
         ignore: ignore,
         proxy_response: proxy_response,
         proxy_options: {
