@@ -18,7 +18,6 @@ module MarkdownLoggingProxy
         overwrite: DEFAULT_OVERWRITES
       )
       @target = to_proxy || target
-      raise ArgumentError, "Missing required proxy target" unless @target
       @logger = MarkdownLogger.build(location, backtrace: backtrace)
       @tracer = Tracer.new(
         target: @target,
