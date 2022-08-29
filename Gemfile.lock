@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    markdown_logging_proxy (0.1.0)
+    markdown_logging_proxy (1.0.0)
 
 GEM
   remote: https://rubygems.org/
