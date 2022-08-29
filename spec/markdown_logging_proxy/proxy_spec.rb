@@ -34,6 +34,10 @@ RSpec.describe MarkdownLoggingProxy::Proxy do
 
   context "with an example class instance" do
     class ExampleClass
+      def initialize
+        @hidden = :hidden_value
+      end
+
       def yield_to_block
         yield :yield_to_block_yield_value
       end
@@ -82,6 +86,13 @@ RSpec.describe MarkdownLoggingProxy::Proxy do
           expect(logs).to match(/argument_2/)
           expect(logs).to match(/ArgumentError/)
         end
+      end
+    end
+
+    describe "#instance_exec" do
+      it "allows instance vars within the target to be read" do
+        expect(subject.instance_exec { @hidden }).to eq(:hidden_value)
+        expect(logs).to match(/hidden_value/)
       end
     end
   end
