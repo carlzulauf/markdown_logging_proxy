@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# Builds gem and the single file copy+pasteable version
+# Builds the single file copy+pasteable version
 
 require "bundler/setup"
 require "pry"

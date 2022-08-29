@@ -24,3 +24,8 @@
 
 - Don't show object IDs for args arrays. It's confusing.
 - BREAKING: Proxies most `Object` methods by default now
+
+## [1.1.1]
+
+- Allow proxying of `nil`
+- Add require statements to copy+paste version
