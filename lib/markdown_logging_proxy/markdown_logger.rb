@@ -1,12 +1,12 @@
 module MarkdownLoggingProxy
   class MarkdownLogger
-    def self.inspect_object(object)
+    def self.inspect_object(object, show_id = true)
       [
         '```ruby',
-        "# #{id_object(object)}",
+        ("# #{id_object(object)}" if show_id),
         object.pretty_inspect.chomp,
         '```'
-      ].join("\n")
+      ].compact.join("\n")
     end
 
     def self.id_object(object)

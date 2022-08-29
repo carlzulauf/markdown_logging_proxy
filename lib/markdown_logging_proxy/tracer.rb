@@ -45,7 +45,7 @@ module MarkdownLoggingProxy
 
         Arguments:
 
-        #{MarkdownLogger.inspect_object(args)}
+        #{MarkdownLogger.inspect_object(args, false)}
 
         Block given? #{block_given? ? 'Yes' : 'No'}
         #{logger.inspect_backtrace}
@@ -81,7 +81,7 @@ module MarkdownLoggingProxy
 
           Arguments:
 
-          #{MarkdownLogger.inspect_object(args)}
+          #{MarkdownLogger.inspect_object(args, false)}
         MSG
         blk.call(*args).tap do |response|
           logger.log :info, 3, <<~MSG.chomp
