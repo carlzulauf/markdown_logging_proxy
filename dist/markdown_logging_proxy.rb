@@ -1,3 +1,7 @@
+require 'logger'
+require 'securerandom'
+require 'pp'
+require 'time'
 module MarkdownLoggingProxy
   class MarkdownLogger
     def self.inspect_object(object, show_id = true)
@@ -81,13 +85,6 @@ module MarkdownLoggingProxy
   end
 end
 module MarkdownLoggingProxy
-  # frozen_string_literal: true
-
-  require 'logger'
-  require 'securerandom'
-  require 'pp'
-  require 'time'
-
   class Proxy
     # Object methods that should be proxied but won't hit method_missing
     DEFAULT_OVERWRITES = %i[
@@ -107,7 +104,6 @@ module MarkdownLoggingProxy
         overwrite: DEFAULT_OVERWRITES
       )
       @target = to_proxy || target
-      raise ArgumentError, "Missing required proxy target" unless @target
       @logger = MarkdownLogger.build(location, backtrace: backtrace)
       @tracer = Tracer.new(
         target: @target,
@@ -248,3 +244,4 @@ module MarkdownLoggingProxy
     end
   end
 end
+
