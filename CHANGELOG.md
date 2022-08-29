@@ -14,3 +14,8 @@
 
 - Add missing CHANGELOG updates
 - Commit updates to compiled `dist/` version of library
+
+## [1.0.2]
+
+- Improved log formatting
+- Fix to proxy method overwrite behavior

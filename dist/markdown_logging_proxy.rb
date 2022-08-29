@@ -1,12 +1,17 @@
 module MarkdownLoggingProxy
   class MarkdownLogger
     def self.inspect_object(object)
-      ['```ruby', object.pretty_inspect.chomp, '```'].join("\n")
+      [
+        '```ruby',
+        "# #{id_object(object)}",
+        object.pretty_inspect.chomp,
+        '```'
+      ].join("\n")
     end
 
     def self.id_object(object)
       # #<Object:0x00007f5a0919e140>
-      "##{object.class}:0x#{object.object_id.to_s(16)}>"
+      "`#<#{object.class}:0x#{object.object_id.to_s(16)}>`"
     end
 
     def self.build(location, **options)
@@ -14,9 +19,10 @@ module MarkdownLoggingProxy
       new(location, **options)
     end
 
-    attr_reader :std_logger, :backtrace, :heading_level
+    attr_reader :std_logger, :backtrace, :heading_level, :created_at
 
     def initialize(location, backtrace: true)
+      @created_at = Time.now
       @std_logger = create_logger(location)
       @heading_level = 1
       @backtrace = backtrace
@@ -62,7 +68,8 @@ module MarkdownLoggingProxy
 
     def markdown_formatter
       proc do |severity, time, __exec, msg|
-        "#{'#' * heading_level} #{severity} in #{Process.pid} at #{time.iso8601} -- #{msg}\n\n"
+        elapsed = Time.now - created_at
+        "#{'#' * heading_level} #{severity} at +#{elapsed.round(5)} -- #{msg}\n\n"
       end
     end
   end
@@ -107,8 +114,8 @@ module MarkdownLoggingProxy
         }
       )
       overwrite.each do |meth|
-        define_method(meth) do |*args, &blk|
-          @traceer.trace(meth, args, &blk)
+        self.class.define_method(meth) do |*args, &blk|
+          @tracer.trace(meth, args, &blk)
         end
       end
     end
@@ -121,7 +128,7 @@ end
 module MarkdownLoggingProxy
   class Tracer
     attr_reader :target, :logger, :ignore, :proxy
-    
+
     def initialize(
         target:,
         proxy:,
@@ -132,7 +139,7 @@ module MarkdownLoggingProxy
       )
       @target = target
       @logger = logger
-      @ignore = (ignore + proxy_response)
+      @ignore = ignore
       @proxy_response = proxy_response
       @proxy_options = proxy_options
     end
@@ -167,7 +174,7 @@ module MarkdownLoggingProxy
 
         #{MarkdownLogger.inspect_object(args)}
 
-        Block? #{block_given? ? 'Yes' : 'No'}
+        Block given? #{block_given? ? 'Yes' : 'No'}
         #{logger.inspect_backtrace}
       MSG
     end
@@ -176,12 +183,14 @@ module MarkdownLoggingProxy
       response = target.public_send(meth, *args, &log_and_proxy_block(meth, blk))
       log_response(meth, response) unless ignore?(meth)
       return response unless proxy_response?(meth)
-      logger.log :info, 3, <<~MSG
+      logger.log :info, 3, <<~MSG.chomp
         Returning proxied response to `#{meth}`
-        
+
         Proxy from `#{meth}` on #{MarkdownLogger.id_object(target)}
-        
-        Proxy for: #{MarkdownLogger.id_object(response)}
+
+        Proxy for:
+
+        #{MarkdownLogger.inspect_object(response)}
       MSG
       Proxy.new(**@proxy_options.merge(
         target: response,
@@ -194,7 +203,7 @@ module MarkdownLoggingProxy
     def log_and_proxy_block(meth, blk)
       return if blk.nil?
       proc do |*args|
-        logger.log :info, 3, <<~MSG
+        logger.log :info, 2, <<~MSG.chomp
           Yield to block in `#{meth}` on #{MarkdownLogger.id_object(target)}
 
           Arguments:
@@ -202,7 +211,7 @@ module MarkdownLoggingProxy
           #{MarkdownLogger.inspect_object(args)}
         MSG
         blk.call(*args).tap do |response|
-          logger.log :info, 4, <<~MSG
+          logger.log :info, 3, <<~MSG.chomp
             Response from block in `#{meth}`
 
             #{MarkdownLogger.inspect_object(response)}
@@ -212,7 +221,7 @@ module MarkdownLoggingProxy
     end
 
     def log_and_reraise_error(meth, error)
-      logger.log :error, 2, <<~MSG
+      logger.log :error, 2, <<~MSG.chomp
         Error in `#{meth}`
 
         Type: #{error.class}
