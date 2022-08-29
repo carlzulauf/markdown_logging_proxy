@@ -23,6 +23,15 @@ RSpec.describe MarkdownLoggingProxy::Proxy do
     end
   end
 
+  context "with an array calling inspect" do
+    let(:target) { [:value_1, :value_2] }
+
+    it "contains the return value in the logs" do
+      subject.inspect
+      expect(logs).to match(/:value_1, :value_2/)
+    end
+  end
+
   context "with an example class instance" do
     class ExampleClass
       def yield_to_block
@@ -35,7 +44,7 @@ RSpec.describe MarkdownLoggingProxy::Proxy do
     end
 
     let(:target) { ExampleClass.new }
-    
+
     describe "#yield_to_block" do
       context "called with a block" do
         it "executes the block with the expected value" do
@@ -56,7 +65,7 @@ RSpec.describe MarkdownLoggingProxy::Proxy do
         end
       end
     end
-    
+
     describe "#single_arg" do
       context "called with a single arg" do
         it "logs the argument and return value" do
