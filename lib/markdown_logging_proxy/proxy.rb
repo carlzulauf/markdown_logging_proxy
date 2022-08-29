@@ -32,8 +32,8 @@ module MarkdownLoggingProxy
         }
       )
       overwrite.each do |meth|
-        define_method(meth) do |*args, &blk|
-          @traceer.trace(meth, args, &blk)
+        self.class.define_method(meth) do |*args, &blk|
+          @tracer.trace(meth, args, &blk)
         end
       end
     end
