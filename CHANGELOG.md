@@ -37,3 +37,8 @@
 ## [1.3.0]
 
 - Add `inspect_method` configuration option
+
+## [1.3.1]
+
+- Object inspection improvements and fixes
+- Implement `inspect_method: :limited` configuration option
