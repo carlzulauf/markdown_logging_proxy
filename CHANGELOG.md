@@ -29,3 +29,7 @@
 
 - Allow proxying of `nil`
 - Add require statements to copy+paste version
+
+## [1.2.0]
+
+- Overwrite as many `Object` methods as we can by default

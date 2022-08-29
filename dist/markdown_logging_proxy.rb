@@ -86,13 +86,8 @@ module MarkdownLoggingProxy
 end
 module MarkdownLoggingProxy
   class Proxy
-    # Object methods that should be proxied but won't hit method_missing
-    DEFAULT_OVERWRITES = %i[
-      ! != !~ <=> == === =~
-      clone display dup enum_for eql? equal? freeze frozen? hash inspect
-      is_a? itself kind_of? nil? taint tainted? tap then to_enum to_s
-      trust untaint unstrust untrusted? yield_self
-    ]
+    DO_NOT_OVERWRITE = %i[__binding__ __id__ __send__ class extend]
+    DEFAULT_OVERWRITES = Object.new.methods - DO_NOT_OVERWRITE
 
     def initialize(
         to_proxy = nil,
@@ -205,16 +200,18 @@ module MarkdownLoggingProxy
 
     def log_and_proxy_block(meth, blk)
       return if blk.nil?
+      logger_ref = self.logger
+      target_ref = self.target
       proc do |*args|
-        logger.log :info, 2, <<~MSG.chomp
-          Yield to block in `#{meth}` on #{MarkdownLogger.id_object(target)}
+        logger_ref.log :info, 2, <<~MSG.chomp
+          Yield to block in `#{meth}` on #{MarkdownLogger.id_object(target_ref)}
 
           Arguments:
 
           #{MarkdownLogger.inspect_object(args, false)}
         MSG
-        blk.call(*args).tap do |response|
-          logger.log :info, 3, <<~MSG.chomp
+        instance_exec(*args, &blk).tap do |response|
+          logger_ref.log :info, 3, <<~MSG.chomp
             Response from block in `#{meth}`
 
             #{MarkdownLogger.inspect_object(response)}
