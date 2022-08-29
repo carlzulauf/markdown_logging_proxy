@@ -18,7 +18,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ### Copy+Paste
 
-Look at `dist/` for compiled versions of the gem which can safely (relatively) be copied into irb/pry sessions.
+You can copy the contents of [`dist/markdown_logging_proxy.rb`](dist/markdown_logging_proxy.rb) into a live irb/pry session.
 
 ## Usage
 
