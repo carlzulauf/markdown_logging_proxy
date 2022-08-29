@@ -38,14 +38,20 @@ module MarkdownLoggingProxy
       @ignore.member?(meth)
     end
 
-    def inspect_object(obj, show_id: true)
+    def inspect_object(obj, args: false)
       obj_str =
         case inspect_method
         when :inspect then obj.inspect
-        when :object_id then object_id(obj)
+        when :limited then limited_inspect(obj)
+        when :id_object
+          if args
+            "[#{obj.map { |o| id_object(o) }.join(',')}]"
+          else
+            id_object(obj)
+          end
         when :pretty_inpect
           [obj.pretty_inspect.chomp].tap do |lines|
-            lines.prepend "# #{object_id(obj)}" if show_id
+            lines.prepend "# #{id_object(obj)}" unless args
           end.join("\n")
         else
           obj.send(inspect_method)
@@ -53,9 +59,31 @@ module MarkdownLoggingProxy
       ['```ruby', obj_str, '```'].join("\n")
     end
 
+    # recursive
+    def limited_inspect(obj)
+      case obj
+      when Array
+        "[#{obj.map { |o| limited_inspect(o) }.join(',')}]"
+      when Hash
+        # assumes keys are safe to .inspect
+        insides = obj.each { |k, v| "#{k.inspect} => #{limited_inspect(v)}" }
+        "{#{insides.join(', ')}}"
+      when String, Symbol, Numeric, Class, true, false, nil
+        truncated_inspect(obj)
+      else
+        id_object(obj)
+      end
+    end
+
     def id_object(object)
       # #<Object:0xe140>
-      "`#<#{object.class}:0x#{object.object_id.to_s(16)}>`"
+      "#<#{object.class}:0x#{object.object_id.to_s(16)}>"
+    end
+
+    def truncated_inspect(obj, limit = 280)
+      obj_str = obj.inspect
+      obj_str = "#{obj_str.first(limit)}..." if obj_str.length > limit
+      obj_str
     end
 
     private
@@ -63,11 +91,11 @@ module MarkdownLoggingProxy
     def log_call_signature(meth, args, &blk)
       return if ignore.member?(meth)
       logger.log :info, 1, <<~MSG.chomp
-        Calling `#{meth}` on #{id_object(target)}
+        Calling `#{meth}` on `#{id_object(target)}`
 
         Arguments:
 
-        #{inspect_object(args, show_id: false)}
+        #{inspect_object(args, args: true)}
 
         Block given? #{block_given? ? 'Yes' : 'No'}
         #{logger.inspect_backtrace}
@@ -81,7 +109,7 @@ module MarkdownLoggingProxy
       logger.log :info, 3, <<~MSG.chomp
         Returning proxied response to `#{meth}`
 
-        Proxy from `#{meth}` on #{id_object(target)}
+        Proxy from `#{meth}` on `#{id_object(target)}`
 
         Proxy for:
 
@@ -101,11 +129,11 @@ module MarkdownLoggingProxy
       tracer = self
       proc do |*args|
         tracer.logger.log :info, 2, <<~MSG.chomp
-          Yield to block in `#{meth}` on #{tracer.id_object(tracer.target)}
+          Yield to block in `#{meth}` on `#{tracer.id_object(tracer.target)}`
 
           Arguments:
 
-          #{tracer.inspect_object(args, show_id: false)}
+          #{tracer.inspect_object(args, args: true)}
         MSG
         instance_exec(*args, &blk).tap do |response|
           tracer.logger.log :info, 3, <<~MSG.chomp
