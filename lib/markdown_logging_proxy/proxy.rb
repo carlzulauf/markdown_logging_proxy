@@ -1,11 +1,4 @@
 module MarkdownLoggingProxy
-  # frozen_string_literal: true
-
-  require 'logger'
-  require 'securerandom'
-  require 'pp'
-  require 'time'
-
   class Proxy
     # Object methods that should be proxied but won't hit method_missing
     DEFAULT_OVERWRITES = %i[
