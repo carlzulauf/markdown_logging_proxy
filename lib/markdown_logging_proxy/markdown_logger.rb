@@ -1,12 +1,17 @@
 module MarkdownLoggingProxy
   class MarkdownLogger
     def self.inspect_object(object)
-      ['```ruby', object.pretty_inspect.chomp, '```'].join("\n")
+      [
+        '```ruby',
+        "# #{id_object(object)}",
+        object.pretty_inspect.chomp,
+        '```'
+      ].join("\n")
     end
 
     def self.id_object(object)
       # #<Object:0x00007f5a0919e140>
-      "##{object.class}:0x#{object.object_id.to_s(16)}>"
+      "`#<#{object.class}:0x#{object.object_id.to_s(16)}>`"
     end
 
     def self.build(location, **options)
@@ -14,9 +19,10 @@ module MarkdownLoggingProxy
       new(location, **options)
     end
 
-    attr_reader :std_logger, :backtrace, :heading_level
+    attr_reader :std_logger, :backtrace, :heading_level, :created_at
 
     def initialize(location, backtrace: true)
+      @created_at = Time.now
       @std_logger = create_logger(location)
       @heading_level = 1
       @backtrace = backtrace
@@ -62,7 +68,8 @@ module MarkdownLoggingProxy
 
     def markdown_formatter
       proc do |severity, time, __exec, msg|
-        "#{'#' * heading_level} #{severity} in #{Process.pid} at #{time.iso8601} -- #{msg}\n\n"
+        elapsed = Time.now - created_at
+        "#{'#' * heading_level} #{severity} at +#{elapsed.round(5)} -- #{msg}\n\n"
       end
     end
   end

@@ -10,8 +10,11 @@ require "markdown_logging_proxy"
 #  We're going to wrap our fruit source in a proxy to see what's going on.
 
 class AppleTree
-  def initialize(apples = 0)
+  attr_reader :apples, :location
+
+  def initialize(apples = 0, location = :field_1)
     @apples = apples
+    @location = location
   end
 
   def pick
@@ -23,6 +26,18 @@ class AppleTree
   def description
     "an apple tree"
   end
+
+  def water
+    percent_complete = 0
+    while percent_complete < 1
+      percent_complete = yield percent_complete
+    end
+    true
+  end
+
+  def groom
+    :pruned
+  end
 end
 
 class FruitPicker < Struct.new(:fruit_source)
@@ -30,18 +45,25 @@ class FruitPicker < Struct.new(:fruit_source)
     puts "Picked from #{fruit_source.description}" while fruit_source.pick
     # maybe the process is swallowing the error you're looking for
     fruit_source.fertilize(:organic) rescue nil
+    fruit_source.water { |progress| progress + rand }
+    fruit_source.adjust_vines if fruit_source.respond_to?(:adjust_vines)
+    fruit_source.groom if fruit_source.respond_to?(:groom)
+    puts "Completed harvest of #{fruit_source.description} in #{fruit_source.location}"
   end
 end
 
 log_path = "tmp/example.md"
 File.unlink(log_path) if File.exist?(log_path)
+io = File.open(log_path, "w")
 
 # instead of sending the tree through the process, we'll wrap it in a proxy...
 tree = AppleTree.new(2)
 proxy = MarkdownLoggingProxy.new(
   tree,
-  location: log_path,
+  location: io,
   backtrace: true,
+  proxy_response: [:location],
+  overwrite: [:to_s],
 )
 
 # and tell the picker to harvest from the proxy

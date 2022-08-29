@@ -1,7 +1,7 @@
 module MarkdownLoggingProxy
   class Tracer
     attr_reader :target, :logger, :ignore, :proxy
-    
+
     def initialize(
         target:,
         proxy:,
@@ -12,7 +12,7 @@ module MarkdownLoggingProxy
       )
       @target = target
       @logger = logger
-      @ignore = (ignore + proxy_response)
+      @ignore = ignore
       @proxy_response = proxy_response
       @proxy_options = proxy_options
     end
@@ -47,7 +47,7 @@ module MarkdownLoggingProxy
 
         #{MarkdownLogger.inspect_object(args)}
 
-        Block? #{block_given? ? 'Yes' : 'No'}
+        Block given? #{block_given? ? 'Yes' : 'No'}
         #{logger.inspect_backtrace}
       MSG
     end
@@ -56,12 +56,14 @@ module MarkdownLoggingProxy
       response = target.public_send(meth, *args, &log_and_proxy_block(meth, blk))
       log_response(meth, response) unless ignore?(meth)
       return response unless proxy_response?(meth)
-      logger.log :info, 3, <<~MSG
+      logger.log :info, 3, <<~MSG.chomp
         Returning proxied response to `#{meth}`
-        
+
         Proxy from `#{meth}` on #{MarkdownLogger.id_object(target)}
-        
-        Proxy for: #{MarkdownLogger.id_object(response)}
+
+        Proxy for:
+
+        #{MarkdownLogger.inspect_object(response)}
       MSG
       Proxy.new(**@proxy_options.merge(
         target: response,
@@ -74,7 +76,7 @@ module MarkdownLoggingProxy
     def log_and_proxy_block(meth, blk)
       return if blk.nil?
       proc do |*args|
-        logger.log :info, 3, <<~MSG
+        logger.log :info, 2, <<~MSG.chomp
           Yield to block in `#{meth}` on #{MarkdownLogger.id_object(target)}
 
           Arguments:
@@ -82,7 +84,7 @@ module MarkdownLoggingProxy
           #{MarkdownLogger.inspect_object(args)}
         MSG
         blk.call(*args).tap do |response|
-          logger.log :info, 4, <<~MSG
+          logger.log :info, 3, <<~MSG.chomp
             Response from block in `#{meth}`
 
             #{MarkdownLogger.inspect_object(response)}
@@ -92,7 +94,7 @@ module MarkdownLoggingProxy
     end
 
     def log_and_reraise_error(meth, error)
-      logger.log :error, 2, <<~MSG
+      logger.log :error, 2, <<~MSG.chomp
         Error in `#{meth}`
 
         Type: #{error.class}
