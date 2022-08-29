@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name = "markdown_logging_proxy"
-  spec.version = "1.0.2"
+  spec.version = "1.1.0"
   spec.authors = ["Carl Zulauf"]
   spec.email = ["carl@linkleaf.com"]
 

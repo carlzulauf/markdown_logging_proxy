@@ -19,3 +19,8 @@
 
 - Improved log formatting
 - Fix to proxy method overwrite behavior
+
+## [1.1.0]
+
+- Don't show object IDs for args arrays. It's confusing.
+- BREAKING: Proxies most `Object` methods by default now
