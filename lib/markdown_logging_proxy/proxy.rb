@@ -1,7 +1,7 @@
 module MarkdownLoggingProxy
-  class Proxy
-    DO_NOT_OVERWRITE = %i[__binding__ __id__ __send__ class extend]
-    DEFAULT_OVERWRITES = Object.new.methods - DO_NOT_OVERWRITE
+  class Proxy < SimpleDelegator
+    # DO_NOT_OVERWRITE = %i[__binding__ __id__ __send__ class extend]
+    # DEFAULT_OVERWRITES = Object.new.methods - DO_NOT_OVERWRITE
 
     def initialize(
         to_proxy = nil,
@@ -11,12 +11,12 @@ module MarkdownLoggingProxy
         inspect_method: :pretty_inspect,
         ignore: [], # methods we shouldn't log/proxy
         proxy_response: [], # methods we should return a proxy for
-        overwrite: DEFAULT_OVERWRITES
+        overwrite: %i[instance_exec instance_eval]
       )
-      @target = to_proxy || target
+      super(to_proxy || target)
       @logger = MarkdownLogger.build(location, backtrace: backtrace)
       @tracer = Tracer.new(
-        target: @target,
+        target: __getobj__,
         proxy: self,
         logger: @logger,
         inspect_method: inspect_method,
